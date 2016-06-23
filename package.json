@@ -1,0 +1,8 @@
+{
+	"name": "animation",
+	"version": "0.1",
+	"author": "p_jiewwang",
+	"devDependencies": {
+		"webpack": "^1.12.11"
+	}
+}

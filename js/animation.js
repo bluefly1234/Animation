@@ -70,11 +70,9 @@ Animation.prototype.changePosition = function(ele, positions, imgUrl) {
 			if (imgUrl) {
 				ele.style.backgroundImage = 'url(' + imgUrl + ')';
 			}
-			//time/me.interval => 
-			// | 0 => 取整
-			// 获得当前背景图片位置下标 ,参考demo1.js
-			var index = Math.min(time / me.interval | 0, len - 1)
-			var positions[index].split(' ');
+			// 获得当前背景图片位置下标 ,参考demo1 time/me.interval  | 0  取整
+			var index = Math.min(time / me.interval | 0, len - 1);
+			var position = positions[index].split(' ');
 			//改变dom对象的背景图片位置(坐标)
 			ele.style.backgroundPosition = position[0] + 'px ' + position[1] + 'px';
 			if (index === len - 1) {
@@ -172,7 +170,7 @@ Animation.prototype.start = function(interval) {
 Animation.prototype.repeat = function(times) {
 	var me = this;
 	var taskFn = function() {
-		if (typeof === 'undefined') {
+		if (typeof times === 'undefined') {
 			//无限回退到上一任务,实现了无限循环的目的
 			me.index--;
 			me._runTask();
@@ -339,4 +337,8 @@ Animation.prototype._asyncTask = function(task) {
 	}
 	this.timeline.onenterframe = enterFrame;
 	this.timeline.start(this.interval)
+}
+
+module.exports = function() {
+	return new Animation();
 }
