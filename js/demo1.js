@@ -29,7 +29,7 @@ function animation(ele, positions, imgurl) {
 			index = 0;
 		}
 
-		setTimeout(run, 80)
+		setTimeout(run, 80) //setTimeout存在不准确的情况，尤其在浏览器环境
 
 	};
 	run();
