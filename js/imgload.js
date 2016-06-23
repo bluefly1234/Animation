@@ -115,4 +115,4 @@ function getId() {
 	return ++__id;
 }
 
-module.export = loadImg;
+module.exports = loadImg;
