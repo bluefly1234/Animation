@@ -1,5 +1,5 @@
-'use strict'
-var loadImg = require('./imgload');
+"use strict";
+var loadImg = require('./loadimg');
 var TimeLine = require('./timeline')
 
 /**
@@ -26,7 +26,7 @@ var TASK_ASYNC = 1;
  * @param  {Function}  callback  The 执行函数
  */
 function next(callback) {
-	callback && callback()
+	callback && callback();
 }
 /**
  * 类库
@@ -44,22 +44,21 @@ function Animation() {
  * The image list
  */
 Animation.prototype.loadImg = function(imgList) {
-	var taskFn = function(next) {
-		//要求数组深拷贝
-		loadImg(imgList.slice(), next);
-	};
+		var taskFn = function(next) {
+			//要求数组深拷贝
+			loadImg(imgList.slice(), next);
+		};
 
-	var type = TASK_SYNC;
-	return this._add(taskFn, type) //最后定义_add方法
-}
-
-/**
- * 添加一个异步定时任务，通过定时器改变背景位置，实现帧动画
- *
- * @param      {<type>}  ele        The ele
- * @param      {<type>}  positions  The positions
- * @param      {<type>}  imgUrl     The image url
- */
+		var type = TASK_SYNC;
+		return this._add(taskFn, type) //最后定义_add方法
+	}
+	/**
+	 * 添加一个异步定时任务，通过定时器改变背景位置，实现帧动画
+	 *
+	 * @param      {<type>}  ele        The ele
+	 * @param      {<type>}  positions  The positions
+	 * @param      {<type>}  imgUrl     The image url
+	 */
 Animation.prototype.changePosition = function(ele, positions, imgUrl) {
 	var len = positions.length;
 	var taskFn;
@@ -73,14 +72,14 @@ Animation.prototype.changePosition = function(ele, positions, imgUrl) {
 			// 获得当前背景图片位置下标 ,参考demo1 time/me.interval  | 0  取整
 			var index = Math.min(time / me.interval | 0, len - 1);
 			var position = positions[index].split(' ');
-			//改变dom对象的背景图片位置(坐标)
-			ele.style.backgroundPosition = position[0] + 'px ' + position[1] + 'px';
+			//改变dom对象的背景图片位置索引(坐标)
+			ele.style.backgroundPosition = position[0] + 'px' + ' ' + position[1] + 'px';
 			if (index === len - 1) {
 				//图片最后一帧实现下一个方法
 				next()
 			};
-			type = TASK_SYNC;
 		}
+		type = TASK_SYNC;
 	} else {
 		taskFn = next;
 		type = TASK_SYNC;
@@ -101,7 +100,7 @@ Animation.prototype.changeSrc = function(ele, imgList) {
 	if (len) {
 		var me = this;
 		taskFn = function(next, time) {
-			//当前图片的索引
+			//获得当前图片的索引
 			var index = Math.min(time / me.interval | 0, len - 1);
 			//改变image对象的图片地址
 			ele.src = imgList[index]
@@ -109,7 +108,7 @@ Animation.prototype.changeSrc = function(ele, imgList) {
 				next()
 			}
 		}
-		type = TASK_ASYNC
+		type = TASK_ASYNC;
 	} else {
 		taskFn = next;
 		type = TASK_SYNC;
@@ -137,8 +136,8 @@ Animation.prototype.then = function(callback) {
 		callback();
 		next()
 	}
-	var type = TASK_SYNC
-	return this._add(taskFn, type)
+	var type = TASK_SYNC;
+	return this._add(taskFn, type);
 }
 
 /**
@@ -200,12 +199,11 @@ Animation.prototype.repeatForever = function() {
 
 /**
  * 设置当前任务结束后到下一个任务的间隔时长
- *
  * @param      {<type>}  time    The time
  */
 Animation.prototype.wait = function(time) {
 	if (this.taskQueue && this.taskQueue.length > 0) {
-		this.taskQueue[this.taskQueue.length - 1].wait = time
+		this.taskQueue[this.taskQueue.length - 1].wait = time;
 	}
 	return this;
 }
@@ -273,7 +271,7 @@ Animation.prototype._add = function(taskFn, type) {
  * 执行任务
  */
 Animation.prototype._runTask = function() {
-	if (!this.taskQueue || this.state == STATE_START) {
+	if (!this.taskQueue || this.state !== STATE_START) {
 		return;
 	}
 	//任务执行完毕
@@ -296,14 +294,35 @@ Animation.prototype._runTask = function() {
  * @param task  执行任务的对象
  */
 Animation.prototype._syncTask = function(task) {
+	var me = this;
 	var next = function() {
-		var me = this;
 		//切换到一下个任务
 		me._next(task);
 	}
 	var taskFn = task.taskFn;
 	taskFn = task.taskFn;
 	taskFn(next);
+}
+
+/**
+ *异步任务
+ * @param task  执行任务的对象
+ */
+Animation.prototype._asyncTask = function(task) {
+	var me = this;
+	//定义每一帧执行的回调函数
+	var enterFrame = function(time) {
+		var taskFn = task.taskFn;
+		var next = function() {
+			//停止当前任务
+			me.timeline.stop();
+			//执行下一个任务
+			me._next(task);
+		};
+		taskFn(next, time)
+	}
+	this.timeline.onenterframe = enterFrame;
+	this.timeline.start(this.interval)
 }
 
 /**
@@ -317,27 +336,9 @@ Animation.prototype._next = function(task) {
 	task.wait ? setTimeout(function() {
 		me._runTask()
 	}, task.wait) : this._runTask();
-}
+};
 
-/**
- *异步任务
- * @param task  执行任务的对象
- */
-Animation.prototype._asyncTask = function(task) {
-	//定义每一帧执行的回调函数
-	var enterFrame = function(time) {
-		var taskFn = taskFn;
-		var next = function() {
-			//停止当前任务
-			me.timeline.stop()
-				//执行下一个任务
-			me._next(task);
-		};
-		taskFn(next, time)
-	}
-	this.timeline.onenterframe = enterFrame;
-	this.timeline.start(this.interval)
-}
+
 
 module.exports = function() {
 	return new Animation();

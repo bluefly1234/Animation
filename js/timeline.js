@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /**
  * 时间轴方法
@@ -10,9 +10,9 @@
 /**
  * 状态
  */
-var START_INITIAL = 0;
-var START_START = 1;
-var START_STOP = 2;
+var STATE_INITIAL = 0; //初始化状态
+var STATE_START = 1; //开始状态
+var STATE_STOP = 2; //停止状态
 /**
  * 兼容各个浏览器，提高动画流畅效果
  * @type {number}
@@ -25,7 +25,7 @@ var requestAnimationFrame = (function() {
 		window.mozRequestAnimationFrame ||
 		window.oRequestAnimationFrame ||
 		function(callback) {
-			return window.setTimeout(callback, callback.interval || DEFAULT_INTERVAL)
+			return window.setTimeout(callback, callback.interval || DEFAULT_INTERVAL);
 		};
 })()
 
@@ -38,7 +38,7 @@ var cancelAnimationFrame = (function() {
 		window.webkitCancelAnimationFrame ||
 		window.mozCancelAnimationFrame ||
 		window.oCancelAnimationFrame ||
-		function(callback) {
+		function(id) {
 			return window.clearTimeout(id);
 		};
 })();
@@ -49,7 +49,7 @@ var cancelAnimationFrame = (function() {
  */
 function Timeline() {
 	this.animationHandler = 0;
-	this.state = START_INITIAL;
+	this.state = STATE_INITIAL;
 }
 
 /**
@@ -66,9 +66,9 @@ Timeline.prototype.onenterframe = function(time) {
  * @param      {<type>}  interval  The interval
  */
 Timeline.prototype.start = function(interval) {
-	if (this.this.state === START_START) {
+	if (this.state === STATE_START) {
 		return;
-		this.state = START_START;
+		this.state = STATE_START;
 
 		this.interval = interval || DEFAULT_INTERVAL;
 		startTimeline(this, +new Date())
@@ -79,10 +79,10 @@ Timeline.prototype.start = function(interval) {
  * 动画停止
  */
 Timeline.prototype.stop = function() {
-	if (this.state !== START_START) {
-		return
+	if (this.state !== STATE_START) {
+		return;
 	}
-	this.state = START_STOP;
+	this.state = STATE_STOP;
 
 	if (this.startTime) {
 		//记录一下从动画开始到当前停止的时间间隔
@@ -94,14 +94,14 @@ Timeline.prototype.stop = function() {
 /**
  * 重新开始动画
  */
-
 Timeline.prototype.restart = function() {
-	if (this.state === START_START) {
-		return
+	if (this.state === STATE_START) {
+		return;
 	}
 	if (!this.dur || !this.interval) {
-		return
+		return;
 	}
+	this.state = STATE_START;
 	//如果不减去，就会丢掉在stop时间。
 	//完全连接动画
 	startTimeline(this, +new Date() - this.dur)
@@ -120,6 +120,7 @@ function startTimeline(timeline, startTime) {
 	//记录上一次回调的时间戳
 	var lastTick = +new Date();
 	nextTick();
+
 	/**
 	 * 每一帧执行的函数
 	 */
@@ -130,7 +131,7 @@ function startTimeline(timeline, startTime) {
 		//如果当前时间与上一次回调的时间戳大宇设置的时间间隔，表示这次可以执行
 		//回调函数onenterframe
 		if (now - lastTick >= timeline.interval) {
-			timeline.onenterframe(now - startTime)
+			timeline.onenterframe(now - startTime);
 			lastTick = now;
 		}
 	}

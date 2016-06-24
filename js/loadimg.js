@@ -1,13 +1,13 @@
-'use strict'
+"use strict";
 
 /**
  * 预加载图片函数
  * p_jiewwang 
  * email@ahthw.com
  *
- * @param      {<type> Array}    images    The images
- * @param      {Function}  callback  The callback
- * @param      {<type>}    timeout   The timeout
+ * @param  {<type> Array} images 加载图片的数组或对象
+ * @param  {Function}  callback  全部图片加载完的回调
+ * @param  {<type>}    timeout   加载超时的时间
  */
 function loadImg(images, callback, timeout) {
 	//加载完成图片的计数器
@@ -43,9 +43,9 @@ function loadImg(images, callback, timeout) {
 		//计数器+1
 		count++;
 		//设置图片元素的id
-		item.id = '_img_' + key + getId();
+		item.id = '__img__' + key + getId();
 		//设置图片元素的img,他是一个Image对象
-		item.img = window[item.id] == new Image();
+		item.img = window[item.id] = new Image();
 
 		doLoad(item);
 	}
@@ -88,10 +88,8 @@ function loadImg(images, callback, timeout) {
 			//清理操作，清理这些事件，解除绑定
 			img.onload = img.onerror = null;
 			try {
-				delete window[item.id]
-			} catch (e) {
-
-			}
+				delete window[item.id];
+			} catch (e) {}
 
 			//每张图片加载完成后，计数器-1，当所有图片加载完成且没有超时
 			//清除超时，且执行回调函数
