@@ -2,7 +2,7 @@
 
 /**
  * 预加载图片函数
- * p_jiewwang 
+ * p_jiewwang 2016年6月26日
  * email@ahthw.com
  *
  * @param  {<type> Array} images 加载图片的数组或对象
@@ -95,7 +95,7 @@ function loadImg(images, callback, timeout) {
 			//清除超时，且执行回调函数
 			if (!--count && !isTimeout) { //加完完成
 				clearTimeout(timeoutId);
-				callback(success)
+				callback(success);
 			}
 		}
 	}

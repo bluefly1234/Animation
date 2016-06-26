@@ -27,7 +27,7 @@ var requestAnimationFrame = (function() {
 		function(callback) {
 			return window.setTimeout(callback, callback.interval || DEFAULT_INTERVAL);
 		};
-})()
+})();
 
 /**
  * 清除requestAnimationFrame 解释器
@@ -48,7 +48,7 @@ var cancelAnimationFrame = (function() {
  * @class  Timeline (name)
  */
 function Timeline() {
-	this.animationHandler = 0;
+	this.animationHandler = null;
 	this.state = STATE_INITIAL;
 }
 
@@ -68,11 +68,10 @@ Timeline.prototype.onenterframe = function(time) {
 Timeline.prototype.start = function(interval) {
 	if (this.state === STATE_START) {
 		return;
-		this.state = STATE_START;
-
-		this.interval = interval || DEFAULT_INTERVAL;
-		startTimeline(this, +new Date())
 	}
+	this.state = STATE_START;
+	this.interval = interval || DEFAULT_INTERVAL;
+	startTimeline(this, +new Date());
 }
 
 /**
@@ -89,7 +88,7 @@ Timeline.prototype.stop = function() {
 		this.dur = +new Date() - this.startTime;
 	}
 	cancelAnimationFrame(this.animationHandler)
-}
+};
 
 /**
  * 重新开始动画
@@ -103,7 +102,7 @@ Timeline.prototype.restart = function() {
 	}
 	this.state = STATE_START;
 	//如果不减去，就会丢掉在stop时间。
-	//完全连接动画
+	//无缝连接动画
 	startTimeline(this, +new Date() - this.dur)
 }
 
@@ -128,8 +127,8 @@ function startTimeline(timeline, startTime) {
 		var now = +new Date()
 		timeline.animationHandler = requestAnimationFrame(nextTick);
 
-		//如果当前时间与上一次回调的时间戳大宇设置的时间间隔，表示这次可以执行
-		//回调函数onenterframe
+		//如果当前时间与上一次回调的时间戳大宇设置的时间间隔，
+		//表示这一次可以执行回调函数onenterframe
 		if (now - lastTick >= timeline.interval) {
 			timeline.onenterframe(now - startTime);
 			lastTick = now;

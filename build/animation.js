@@ -56,7 +56,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 	var loadImg = __webpack_require__(1);
-	var TimeLine = __webpack_require__(2)
+	var TimeLine = __webpack_require__(2);
 
 	/**
 	 * 帧动画库类
@@ -77,17 +77,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	var TASK_ASYNC = 1;
 
 	/**
-	 * 简单的函数封装，执行callback
-	 *
-	 * @param  {Function}  callback  The 执行函数
-	 */
-	function next(callback) {
-		callback && callback();
-	}
-	/**
 	 * 类库
 	 */
-
 	function Animation() {
 		this.taskQueue = []; //任务链
 		this.index = 0; //任务链状态
@@ -106,33 +97,36 @@ return /******/ (function(modules) { // webpackBootstrap
 			};
 
 			var type = TASK_SYNC;
+			//_add返回的是this，这样写一句顶两句，既返回了this也执行了_add
 			return this._add(taskFn, type) //最后定义_add方法
 		}
 		/**
 		 * 添加一个异步定时任务，通过定时器改变背景位置，实现帧动画
 		 *
 		 * @param      {<type>}  ele        The ele
-		 * @param      {<type>}  positions  The positions
+		 * @param      {<type>}  positions  The positions 背景位置数组
 		 * @param      {<type>}  imgUrl     The image url
 		 */
 	Animation.prototype.changePosition = function(ele, positions, imgUrl) {
+		var self = this;
 		var len = positions.length;
 		var taskFn;
 		var type;
 		if (len) {
-			var me = this;
+			if (imgUrl) {
+				ele.style.backgroundImage = 'url(' + imgUrl + ')';
+			}
 			taskFn = function(next, time) {
-				if (imgUrl) {
-					ele.style.backgroundImage = 'url(' + imgUrl + ')';
-				}
-				// 获得当前背景图片位置下标 ,参考demo1 time/me.interval  | 0  取整
-				var index = Math.min(time / me.interval | 0, len - 1);
+				// 获得当前背景图片位置下标 ,参考demo1 time/that.interval  | 0  取整
+				//  time / this.interval | 0 相当于 Math.floor(time / this.interval);  但是效率更好
+				var index = Math.min(time / self.interval | 0, len) - 1;
 				var position = positions[index].split(' ');
+
 				//改变dom对象的背景图片位置索引(坐标)
-				ele.style.backgroundPosition = position[0] + 'px' + ' ' + position[1] + 'px';
+				ele.style.backgroundPosition = position[0] + 'px ' + position[1] + 'px';
 				if (index === len - 1) {
 					//图片最后一帧实现下一个方法
-					next()
+					next();
 				};
 			}
 			type = TASK_SYNC;
@@ -140,7 +134,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			taskFn = next;
 			type = TASK_SYNC;
 		}
-		return this._add(taskFn, type)
+		return this._add(taskFn, type);
 	}
 
 	/**
@@ -150,14 +144,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param      {<type>}  imgList  The image list
 	 */
 	Animation.prototype.changeSrc = function(ele, imgList) {
+		var self = this;
 		var len = imgList.length;
 		var taskFn;
 		var type;
 		if (len) {
-			var me = this;
 			taskFn = function(next, time) {
 				//获得当前图片的索引
-				var index = Math.min(time / me.interval | 0, len - 1);
+				var index = Math.min(time / self.interval | 0, len - 1);
 				//改变image对象的图片地址
 				ele.src = imgList[index]
 				if (index === len - 1) {
@@ -176,10 +170,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * 高级用法，添加一个异步定时执行的任务
 	 * 这个任务自定义动画每帧执行的任务函数
 	 *
-	 * @param      {<type>}  taskFn  The task function
+	 * @param  {<type>}  taskFn 自定义每帧的任务函数
 	 */
 	Animation.prototype.enterFrame = function(taskFn) {
-		return this._add(taskFn, TASK_ASYNC)
+		return this._add(taskFn, TASK_ASYNC);
 	}
 
 	/**
@@ -193,7 +187,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			next()
 		}
 		var type = TASK_SYNC;
-		return this._add(taskFn, type);
+		return this._add(taskFn, TASK_SYNC);
 	}
 
 	/**
@@ -203,7 +197,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	Animation.prototype.start = function(interval) {
 		if (this.state === STATE_START) {
-			return this
+			return this;
 		}
 		//如果任务链中没有任务，则返回
 		if (!this.taskQueue.length) {
@@ -212,8 +206,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		this.state = STATE_START;
 		this.interval = interval;
 		this._runTask();
-		return this
-
+		return this;
 	}
 
 	/**
@@ -223,27 +216,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param      {Number}  times 重复次数
 	 */
 	Animation.prototype.repeat = function(times) {
-		var me = this;
-		var taskFn = function() {
+		var self = this;
+		var taskFn = function(next) {
 			if (typeof times === 'undefined') {
-				//无限回退到上一任务,实现了无限循环的目的
-				me.index--;
-				me._runTask();
+				self.index--;
+				self._runTask();
 				return;
 			}
 			if (times) {
 				times--;
-				//回退
-				me.index--;
-				me._runTask();
+				self.index--;
+				self._runTask();
 			} else {
-				//达到重复的次数(times-- === 0)，跳转下一个任务
-				var task = me.taskQueue[me.index]
-				me._next(task)
+				self._next(self.taskQueue[self.index]);
 			}
 		}
-		var type = TASK_SYNC;
-		return this._add(taskFn, type);
+		return this._add(taskFn, TASK_SYNC);
 	}
 
 	/**
@@ -271,7 +259,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		if (this.state === STATE_START) {
 			this.state = STATE_STOP;
 			this.timeline.stop();
-			return this
+			return this;
 		}
 		return this;
 	}
@@ -284,7 +272,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		if (this.state === STATE_STOP) {
 			this.state = STATE_START;
 			this.timeline.restart();
-			return this
+			return this;
 		}
 		return this;
 	}
@@ -296,9 +284,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	Animation.prototype.dispose = function() {
 		if (this.state !== STATE_INITIAL) {
 			this.state = STATE_INITIAL;
-			this.taskQueue = null;
 			this.timeline.stop();
 			this.timeline = null;
+			this.taskQueue = [];
 			return this;
 		}
 		return this;
@@ -342,7 +330,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		} else {
 			this._asyncTask(task);
 		}
-	}
+	};
 
 	/**
 	 * 同步任务
@@ -350,14 +338,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param task  执行任务的对象
 	 */
 	Animation.prototype._syncTask = function(task) {
-		var me = this;
+		var self = this;
 		var next = function() {
-			//切换到一下个任务
-			me._next(task);
+			self._next(task);
 		}
-		var taskFn = task.taskFn;
-		taskFn = task.taskFn;
-		taskFn(next);
+		task.taskFn(next);
 	}
 
 	/**
@@ -365,20 +350,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param task  执行任务的对象
 	 */
 	Animation.prototype._asyncTask = function(task) {
-		var me = this;
+		var self = this;
 		//定义每一帧执行的回调函数
 		var enterFrame = function(time) {
 			var taskFn = task.taskFn;
 			var next = function() {
-				//停止当前任务
-				me.timeline.stop();
-				//执行下一个任务
-				me._next(task);
-			};
-			taskFn(next, time)
+				self.timeline.stop();
+				self._next(task);
+			}
+			taskFn(next, time);
 		}
 		this.timeline.onenterframe = enterFrame;
-		this.timeline.start(this.interval)
+		this.timeline.start(this.interval);
 	}
 
 	/**
@@ -387,14 +370,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * 增加 @param task 当前任务
 	 */
 	Animation.prototype._next = function(task) {
+		var self = this;
 		this.index++;
-		var me = this;
-		task.wait ? setTimeout(function() {
-			me._runTask()
-		}, task.wait) : this._runTask();
+		task.wait ?
+			setTimeout(function() {
+				self._runTask();
+			}, task.wait) :
+			this._runTask();
 	};
 
-
+	/**
+	 * 简单的函数封装，执行callback
+	 *
+	 * @param  {Function}  callback  The 执行函数
+	 */
+	function next(callback) {
+		callback && callback();
+	}
 
 	module.exports = function() {
 		return new Animation();
@@ -408,7 +400,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/**
 	 * 预加载图片函数
-	 * p_jiewwang 
+	 * p_jiewwang 2016年6月26日
 	 * email@ahthw.com
 	 *
 	 * @param  {<type> Array} images 加载图片的数组或对象
@@ -501,7 +493,7 @@ return /******/ (function(modules) { // webpackBootstrap
 				//清除超时，且执行回调函数
 				if (!--count && !isTimeout) { //加完完成
 					clearTimeout(timeoutId);
-					callback(success)
+					callback(success);
 				}
 			}
 		}
@@ -554,7 +546,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			function(callback) {
 				return window.setTimeout(callback, callback.interval || DEFAULT_INTERVAL);
 			};
-	})()
+	})();
 
 	/**
 	 * 清除requestAnimationFrame 解释器
@@ -575,7 +567,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @class  Timeline (name)
 	 */
 	function Timeline() {
-		this.animationHandler = 0;
+		this.animationHandler = null;
 		this.state = STATE_INITIAL;
 	}
 
@@ -595,11 +587,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	Timeline.prototype.start = function(interval) {
 		if (this.state === STATE_START) {
 			return;
-			this.state = STATE_START;
-
-			this.interval = interval || DEFAULT_INTERVAL;
-			startTimeline(this, +new Date())
 		}
+		this.state = STATE_START;
+		this.interval = interval || DEFAULT_INTERVAL;
+		startTimeline(this, +new Date());
 	}
 
 	/**
@@ -616,7 +607,7 @@ return /******/ (function(modules) { // webpackBootstrap
 			this.dur = +new Date() - this.startTime;
 		}
 		cancelAnimationFrame(this.animationHandler)
-	}
+	};
 
 	/**
 	 * 重新开始动画
@@ -630,7 +621,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		}
 		this.state = STATE_START;
 		//如果不减去，就会丢掉在stop时间。
-		//完全连接动画
+		//无缝连接动画
 		startTimeline(this, +new Date() - this.dur)
 	}
 
@@ -655,8 +646,8 @@ return /******/ (function(modules) { // webpackBootstrap
 			var now = +new Date()
 			timeline.animationHandler = requestAnimationFrame(nextTick);
 
-			//如果当前时间与上一次回调的时间戳大宇设置的时间间隔，表示这次可以执行
-			//回调函数onenterframe
+			//如果当前时间与上一次回调的时间戳大宇设置的时间间隔，
+			//表示这一次可以执行回调函数onenterframe
 			if (now - lastTick >= timeline.interval) {
 				timeline.onenterframe(now - startTime);
 				lastTick = now;
